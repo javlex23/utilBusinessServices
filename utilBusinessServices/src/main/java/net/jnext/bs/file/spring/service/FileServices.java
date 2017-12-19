@@ -7,112 +7,79 @@ package net.jnext.bs.file.spring.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import net.jnext.bs.bean.UploadFile;
-import net.jnext.bs.enums.ExtensionFile;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import static net.jnext.bs.file.spring.util.Util.getPathServerFile;
+import static net.jnext.bs.file.spring.util.Util.getSeparator;
 
 /**
  *
  * @author jcernaq
  */
+@Path("/files")
 public final class FileServices {
     
     /**
      * Constructor por defecto
      */
-    private FileServices(){
+    public FileServices(){
     }
     
     private static final Logger LOGGER = LogManager.getLogger(FileServices.class);
     
-    /**
-     * Método para obtener una lista Multipart de un request
-     * @param request 
-     * @return lista de Multipart
-     */
-    public static  List<MultipartFile> getLstMultipartFileFromRequest(MultipartHttpServletRequest request){
-        Iterator<String> itr = request.getFileNames();
-        List<MultipartFile> lst = new ArrayList<>();
-        while (itr.hasNext()){
-                lst.add(request.getFile(itr.next()));
-        }
-        return lst;
-    }
-    
-    /**
-     * Método para verificar el tipo de un documento
-     * @param filetype extensión del archivo
-     * @param extension extensión a comparar
-     * @return boolean
-     */
-    public static boolean checkExtension(String filetype, ExtensionFile extension) {
-        return filetype.equals(extension.getValue());
-    }
-    
-    /**
-     * Método para determinar si un archivo está vacío
-     * @param mpf 
-     * @return boolean
-     */
-    public static boolean isEmptyFile(MultipartFile mpf){
-        return mpf == null || mpf.getSize()==0 || mpf.getOriginalFilename().isEmpty();
-    }
-    
-    private static String getSeparator(){
-        return System.getProperty("file.separator");
-    }
-    
-    /**
-     * 
-     * @return ruta servidor
-     */
-    private static String getPathServerFile(){
-        String separador = getSeparator();
-        if(separador.equals("/")){
-            return System.getProperty("file.server.linux");
-        } else {
-            return System.getProperty("file.server.windows");
-        }
+    @GET
+    @Path("/version")
+    public String version(){
+        return "1.0.0";
     }
     
     /**
      * 
      * @param uploadFile 
-     * @param path 
-     * @param copyFile 
-     * @return
-     * @throws IOException 
+     * @return UploadFile
      */
-    public String saveFileInServer(UploadFile uploadFile, String path, String copyFile) throws IOException{
-        File dir = new File(path);
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/transfer")
+    public UploadFile saveFileInServer(UploadFile uploadFile){
+        File dir = new File(getPathServerFile() + getSeparator() + uploadFile.getDestinyPath());
         
         if(!dir.exists()) {
             dir.mkdirs();
         }
         
-        File file = new File(path + getSeparator() + copyFile);        
+        try{
+            File file = new File(uploadFile.getCopyFile());        
         
-        DiskFileItem fileItem = new DiskFileItem(
-                uploadFile.getFilename(), uploadFile.getType(), false, file.getName(), 
-                (int) file.length() , file.getParentFile());
-        fileItem.getOutputStream();
-        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);       
-       
-        uploadFile.setFile(multipartFile); 
+            DiskFileItem fileItem = new DiskFileItem(
+                    uploadFile.getFilename(), uploadFile.getType(), false, file.getName(), 
+                    (int) file.length() , file.getParentFile());
+            fileItem.getOutputStream();
+            MultipartFile multipartFile = new CommonsMultipartFile(fileItem);       
+
+            uploadFile.setFile(multipartFile); 
+            uploadFile.setBytes(fileItem.get());
+            LOGGER.debug("Archivo a grabar ========" + multipartFile.getOriginalFilename()); 
+
+            uploadFile.getFile().transferTo(file);
+            
+            uploadFile.setTransfer(true);
+        }catch(IOException e){
+            uploadFile.setTransfer(false);
+            LOGGER.debug("Error en archivo: " + e.getMessage());
+        }
         
-        LOGGER.debug("Nombre del archivo de sustento a grabar ===================" 
-                + multipartFile.getOriginalFilename()); 
-        
-        uploadFile.getFile().transferTo(file);        
-        
-        return multipartFile.getOriginalFilename();
+        return uploadFile;
     }
 }

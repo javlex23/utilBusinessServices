@@ -6,19 +6,28 @@
 package net.jnext.bs.bean;
 
 import java.io.Serializable;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  *
  * @author jcernaq
  */
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class UploadFile implements Serializable{
+
     private static final long serialVersionUID = 1L;
     
     private String filename;
     private String type;
-    private byte[] bytes;
-    private MultipartFile file;
+    private transient byte[] bytes;
+    private transient MultipartFile file;
+    private String destinyPath;
+    private String copyFile;
+    private boolean transfer;
 
     /**
      * Constructor por defecto
@@ -103,5 +112,46 @@ public class UploadFile implements Serializable{
     public void setFile(MultipartFile file) {
         this.file = file;
     }
+
+    /**
+     * @return the destinyPath
+     */
+    public String getDestinyPath() {
+        return destinyPath;
+    }
+
+    /**
+     * @param destinyPath the destinyPath to set
+     */
+    public void setDestinyPath(String destinyPath) {
+        this.destinyPath = destinyPath;
+    }
+
+    /**
+     * @return the copyFile
+     */
+    public String getCopyFile() {
+        return copyFile;
+    }
+
+    /**
+     * @param copyFile the copyFile to set
+     */
+    public void setCopyFile(String copyFile) {
+        this.copyFile = copyFile;
+    }
     
+    /**
+     * @return the transfer
+     */
+    public boolean isTransfer() {
+        return transfer;
+    }
+
+    /**
+     * @param transfer the transfer to set
+     */
+    public void setTransfer(boolean transfer) {
+        this.transfer = transfer;
+    }
 }
