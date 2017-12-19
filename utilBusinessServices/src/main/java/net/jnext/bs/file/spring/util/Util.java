@@ -26,7 +26,7 @@ public class Util {
         Iterator<String> itr = request.getFileNames();
         List<MultipartFile> lst = new ArrayList<>();
         while (itr.hasNext()){
-                lst.add(request.getFile(itr.next()));
+            lst.add(request.getFile(itr.next()));
         }
         return lst;
     }
@@ -50,8 +50,20 @@ public class Util {
         return mpf == null || mpf.getSize()==0 || mpf.getOriginalFilename().isEmpty();
     }
     
-    public static String getSeparator(){
+    private static String getSeparator(){
         return System.getProperty("file.separator");
+    }
+    
+    /**
+     * 
+     * @return separador
+     */
+    public static String writeSeparator(){
+        if(!getSeparator().equals("/")){
+            return "\\";
+        }else{
+            return getSeparator();
+        }
     }
     
     /**

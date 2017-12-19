@@ -6,21 +6,20 @@
 package net.jnext.bs.file.spring.service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import net.jnext.bs.bean.UploadFile;
-import org.apache.commons.fileupload.disk.DiskFileItem;
+import static net.jnext.bs.file.spring.util.Util.writeSeparator;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
-import static net.jnext.bs.file.spring.util.Util.getPathServerFile;
-import static net.jnext.bs.file.spring.util.Util.getSeparator;
 
 /**
  *
@@ -37,14 +36,8 @@ public final class FileServices {
     
     private static final Logger LOGGER = LogManager.getLogger(FileServices.class);
     
-    @GET
-    @Path("/version")
-    public String version(){
-        return "1.0.0";
-    }
-    
     /**
-     * 
+     * Método para guardar un archivo en el server
      * @param uploadFile 
      * @return UploadFile
      */
@@ -53,26 +46,29 @@ public final class FileServices {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/transfer")
     public UploadFile saveFileInServer(UploadFile uploadFile){
-        File dir = new File(getPathServerFile() + getSeparator() + uploadFile.getDestinyPath());
-        
+        File dir = new File(uploadFile.getDestinyPath() + writeSeparator());
+        LOGGER.debug(dir.getAbsolutePath());
         if(!dir.exists()) {
             dir.mkdirs();
         }
         
         try{
             File file = new File(uploadFile.getCopyFile());        
-        
-            DiskFileItem fileItem = new DiskFileItem(
-                    uploadFile.getFilename(), uploadFile.getType(), false, file.getName(), 
-                    (int) file.length() , file.getParentFile());
-            fileItem.getOutputStream();
-            MultipartFile multipartFile = new CommonsMultipartFile(fileItem);       
+
+            LOGGER.debug("Archivo seleccionado ======== " + file.getName()); 
+            LOGGER.debug("Size archivo seleccionado ======== " + (int) file.length()); 
+
+            FileInputStream input = new FileInputStream(file);
+            MultipartFile multipartFile = new MockMultipartFile(uploadFile.getFilename(),
+            file.getName(), uploadFile.getType(), IOUtils.toByteArray(input));
 
             uploadFile.setFile(multipartFile); 
-            uploadFile.setBytes(fileItem.get());
-            LOGGER.debug("Archivo a grabar ========" + multipartFile.getOriginalFilename()); 
-
-            uploadFile.getFile().transferTo(file);
+            LOGGER.debug("Archivo a grabar ======== " + multipartFile.getOriginalFilename()); 
+            LOGGER.debug("Size archivo a grabar ======== " + multipartFile.getBytes().length); 
+            uploadFile.getFile().transferTo(
+                    new File(uploadFile.getDestinyPath() + writeSeparator() + uploadFile.getFilename()));
+            LOGGER.debug("Bytes transferidos a ======== " + uploadFile.getDestinyPath() 
+                    + writeSeparator() + uploadFile.getFilename()); 
             
             uploadFile.setTransfer(true);
         }catch(IOException e){

@@ -5,6 +5,7 @@
  */
 package net.jnext.bs.bean;
 
+import java.io.IOException;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -21,13 +22,12 @@ public class UploadFile implements Serializable{
 
     private static final long serialVersionUID = 1L;
     
-    private String filename;
-    private String type;
-    private transient byte[] bytes;
-    private transient MultipartFile file;
-    private String destinyPath;
-    private String copyFile;
-    private boolean transfer;
+    private String filename; //Nombre del archivo a crear
+    private String type; //Tipo de archivo a crear
+    private String destinyPath; //Path destino donde copiar el archivo en el server
+    private transient MultipartFile file; //Multipart capturado
+    private String copyFile; //Archivo a copiar
+    private boolean transfer; //Estado de la transferencia
 
     /**
      * Constructor por defecto
@@ -38,13 +38,9 @@ public class UploadFile implements Serializable{
     /**
      * Constructor 
      * @param filename 
-     * @param type 
-     * @param bytes 
      */
-    public UploadFile(String filename, String type, byte[] bytes){
+    public UploadFile(String filename){
         this.filename = filename;
-        this.type = type;
-        this.bytes = bytes;
     }
     
     /**
@@ -74,31 +70,28 @@ public class UploadFile implements Serializable{
     /**
      * @return the type
      */
-    public String getType() {
-        return type;
+    public String getContentType() {
+        return file.getContentType();
     }
 
     /**
-     * @param type the type to set
+     * 
+     * @return array de bytes
+     * @throws IOException 
      */
-    public void setType(String type) {
-        this.type = type;
+    public byte[] getBytes() throws IOException {
+        return file.getBytes();
     }
 
     /**
-     * @return the bytes
+     * 
+     * @return tamaño del archivo
+     * @throws IOException 
      */
-    public byte[] getBytes() {
-        return bytes;
+    public int getSize() throws IOException{
+        return getBytes().length;
     }
-
-    /**
-     * @param bytes the bytes to set
-     */
-    public void setBytes(byte[] bytes) {
-        this.bytes = bytes;
-    }
-
+    
     /**
      * @return the file
      */
@@ -153,5 +146,19 @@ public class UploadFile implements Serializable{
      */
     public void setTransfer(boolean transfer) {
         this.transfer = transfer;
+    }
+
+    /**
+     * @return the type
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(String type) {
+        this.type = type;
     }
 }

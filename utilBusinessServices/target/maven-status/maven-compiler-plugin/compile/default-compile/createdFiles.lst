@@ -1,0 +1,5 @@
+net\jnext\bs\file\spring\service\FileServices.class
+net\jnext\bs\file\service\FileServices.class
+net\jnext\bs\enums\ExtensionFile.class
+net\jnext\bs\file\spring\util\Util.class
+net\jnext\bs\bean\UploadFile.class
